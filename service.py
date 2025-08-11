@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 
-# 🔹 Importar el modelo HRM desde el repo que clonaste
-# Ejemplo: from hrm import HRMModel
-# Ajustá esta línea según cómo se carga el modelo en tu repo
-# hrm_model = HRMModel.load("ruta_o_configuracion")
+# 🚀 Cargar modelo HRM desde Hugging Face
+MODEL_NAME = "ruta/del/modelo-en-huggingface"  # <-- Cambia por el nombre exacto del modelo HRM
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
 
 app = FastAPI()
 
@@ -14,18 +16,9 @@ class ReasonRequest(BaseModel):
 
 @app.post("/reason")
 async def reason(req: ReasonRequest):
-    context = req.context
-    question = req.question
+    prompt = f"Contexto:\n{req.context}\n\nPregunta:\n{req.question}\n\nRazonamiento paso a paso:"
+    inputs = tokenizer(prompt, return_tensors="pt")
+    outputs = model.generate(**inputs, max_length=300)
+    response_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return {"plan": "Razonamiento generado", "answerDraft": response_text}
 
-    # 🔹 Aquí llamamos a HRM para obtener el razonamiento
-    # Esto depende de cómo funciona la API del modelo en tu repo
-    # Ejemplo ficticio:
-    # reasoning = hrm_model.reason(context, question)
-    # return {"plan": reasoning.plan, "steps": reasoning.steps, "answerDraft": reasoning.draft}
-
-    # 🔹 Por ahora, si no sabes cómo invocar, ponemos un mock
-    return {
-        "plan": f"Analizar contexto y responder a '{question}'",
-        "steps": ["Analizar contexto", "Generar respuesta"],
-        "answerDraft": f"Respuesta provisional para: {question}"
-    }
