@@ -11,3 +11,7 @@ hydra-core
 huggingface_hub
 fastapi
 uvicorn
+fastapi
+uvicorn
+transformers
+torch
